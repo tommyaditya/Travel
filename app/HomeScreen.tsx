@@ -1,18 +1,17 @@
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { 
-    SafeAreaView, 
-    ScrollView, 
-    StyleSheet, 
-    Text, 
-    View, 
-    TextInput, 
-    TouchableOpacity, 
+import {
     Image,
+    ScrollView,
     StatusBar,
-    ImageSourcePropType
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons'; 
-import { useNavigation, NavigationProp } from '@react-navigation/native'; 
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- 1. DEFINISI TIPE NAVIGATION ---
 // Tentukan semua rute utama Anda sesuai dengan nama file di folder app/
@@ -31,7 +30,7 @@ interface Destination {
     name: string;
     rating: string;
     price: string;
-    image: ImageSourcePropType;
+    image: string;
 }
 
 interface DestinationProps {
@@ -179,8 +178,28 @@ const BottomNav: React.FC = () => {
     );
 };
 
-// --- 9. Komponen Utama HomeScreen ---
+// --- 9. Komponen Utama HomeScreen (connect ke API) ---
 const HomeScreen: React.FC = () => {
+    const [destinations, setDestinations] = useState<Destination[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDestinations = async () => {
+            try {
+                const res = await fetch('https://69035071d0f10a340b239e2b.mockapi.io/api');
+                const data = await res.json();
+                const list = Array.isArray(data) ? data : [];
+                setDestinations(list);
+            } catch (err) {
+                console.error('Gagal memuat data:', err);
+                setDestinations([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDestinations();
+    }, []);
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
@@ -188,7 +207,11 @@ const HomeScreen: React.FC = () => {
                 <Header />
                 <PromoCard />
                 <SearchBar />
-                <PopularDestinations destinations={destinations} />
+                {loading ? (
+                    <ActivityIndicator size="large" color="#FF5733" style={{ marginTop: 30 }} />
+                ) : (
+                    <PopularDestinations destinations={destinations} />
+                )}
             </ScrollView>
             <BottomNav />
         </SafeAreaView>
